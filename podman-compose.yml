@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: beeai
+      RABBITMQ_DEFAULT_PASS: beeai_pass
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  neo4j:
+    image: neo4j:5-community
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/beeai_graph
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+
+  beeai_contextagent:
+    build:
+      context: ../beeai_contextagent
+      dockerfile: Podmanfile
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  validator:
+    build:
+      context: ../validator
+      dockerfile: Podmanfile
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  beeai_agent:
+    build:
+      context: ../beeai_agent
+      dockerfile: Podmanfile
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    environment:
+      RABBITMQ_URL: amqp://beeai:beeai_pass@rabbitmq/
+      REDIS_URL: redis://redis:6379/0
+      NEO4J_URL: bolt://neo4j:7687
+      NEO4J_AUTH: neo4j/beeai_graph
+
+  beeai_api:
+    build:
+      context: ../beeai_api
+      dockerfile: Podmanfile
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    environment:
+      RABBITMQ_URL: amqp://beeai:beeai_pass@rabbitmq/

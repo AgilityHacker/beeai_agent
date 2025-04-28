@@ -1,0 +1,31 @@
+# C4 System Context Diagram (PlantUML)
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(user, "User")
+System_Ext(nginx, "Nginx")
+System_Ext(cert, "CertManager")
+System(beeai_api, "BeeAI API")
+System(beeai_agent, "BeeAI Agent")
+System(beeai_contextagent, "BeeAI ContextAgent")
+System(validator, "Validator")
+System(neo4j, "Neo4j GraphDB")
+System(redis, "Redis Cache")
+System(rabbitmq, "RabbitMQ Event Bus")
+System(prometheus, "Prometheus")
+System(grafana, "Grafana")
+
+Rel(user, beeai_api, "uses")
+Rel(beeai_api, beeai_agent, "publishes/consumes events")
+Rel(beeai_api, validator, "calls for validation")
+Rel(beeai_agent, rabbitmq, "publishes/consumes events")
+Rel(beeai_agent, redis, "short-term memory")
+Rel(beeai_agent, neo4j, "context graph")
+Rel(beeai_contextagent, redis, "caching")
+Rel(beeai_contextagent, beeai_agent, "provides scoped context")
+Rel(validator, beeai_api, "validates insight")
+Rel(beeai_api, prometheus, "metrics")
+Rel(prometheus, grafana, "dashboard")
+Rel(beeai_api, nginx, "proxied through")
+Rel(nginx, cert, "uses certificates from")
+@enduml

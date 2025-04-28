@@ -1,0 +1,31 @@
+name: BeeAI Integration Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Podman
+        uses: redhat-actions/podman-install@v1
+        with:
+          version: latest
+
+      - name: Build and run BeeAI stack
+        run: |
+          cd infra
+          podman-compose build
+          podman-compose up -d
+
+      - name: Run integration test
+        run: |
+          cd infra
+          chmod +x test_integration.sh
+          ./test_integration.sh

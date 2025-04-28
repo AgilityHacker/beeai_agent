@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' System boundaries
+Boundary(beeai, "BeeAI Platform") {
+  Container(beeai_api, "BeeAI API", "FastAPI", "API Gateway, event-driven, Prometheus metrics")
+  Container(beeai_agent, "BeeAI Agent", "Python Worker", "Short-term memory, event processing")
+  Container(beeai_contextagent, "ContextAgent", "Python Worker", "Context gathering, enrichment, caching")
+  Container(validator, "Validator", "Python Worker", "Insight validation, context updates")
+}
+System_Ext(user, "User")
+System_Ext(rabbitmq, "RabbitMQ")
+System_Ext(redis, "Redis")
+System_Ext(neo4j, "Neo4j")
+System_Ext(prometheus, "Prometheus")
+System_Ext(grafana, "Grafana")
+
+Rel(user, beeai_api, "HTTP/Chat")
+Rel(beeai_api, beeai_agent, "Publishes/Consumes Events [RabbitMQ]")
+Rel(beeai_api, validator, "Calls for Validation")
+Rel(beeai_agent, rabbitmq, "Publishes/Consumes Events")
+Rel(beeai_agent, redis, "Short-term Memory")
+Rel(beeai_agent, neo4j, "Context Graph")
+Rel(beeai_contextagent, redis, "Caching")
+Rel(beeai_contextagent, beeai_agent, "Provides Scoped Context")
+Rel(validator, beeai_api, "Validates Insight")
+Rel(beeai_api, prometheus, "Metrics")
+Rel(prometheus, grafana, "Dashboard")
+@enduml
