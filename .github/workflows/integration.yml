@@ -13,19 +13,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Podman
-        uses: redhat-actions/podman-install@v1
-        with:
-          version: latest
-
       - name: Build and run BeeAI stack
         run: |
-          cd infra
+          cd ../infra
           docker-compose build
           docker-compose up -d
 
       - name: Run integration test
         run: |
-          cd infra
+          cd ../infra
           chmod +x test_integration.sh
           ./test_integration.sh
